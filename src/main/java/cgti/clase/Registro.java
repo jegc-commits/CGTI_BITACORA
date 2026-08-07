@@ -1,23 +1,23 @@
+
 package cgti.clase;
 
 import java.time.LocalDateTime;
 
 public class Registro {
-
     private Long id;
     private LocalDateTime horaEntrada;
     private LocalDateTime horaSalida;
     private String proposito;
-    private Laboratorio laboratorio;
+    private String laboratorio;
     private Usuario usuario;
     private Long equipoId;
     private String equipoNombre;
-    private Long apartadoId;
-    private boolean incidencia; // true si la salida se marco automaticamente por exceso de tiempo
-    private String notaIncidencia;
+    private boolean incidencia;
+
+    public Registro() {
+    }
 
     // Getters y Setters
-
     public Long getId() {
         return id;
     }
@@ -50,11 +50,11 @@ public class Registro {
         this.proposito = proposito;
     }
 
-    public Laboratorio getLaboratorio() {
+    public String getLaboratorio() {
         return laboratorio;
     }
 
-    public void setLaboratorio(Laboratorio laboratorio) {
+    public void setLaboratorio(String laboratorio) {
         this.laboratorio = laboratorio;
     }
 
@@ -74,12 +74,12 @@ public class Registro {
         this.equipoId = equipoId;
     }
 
-    public Long getApartadoId() {
-        return apartadoId;
+    public String getEquipoNombre() {
+        return equipoNombre;
     }
 
-    public void setApartadoId(Long apartadoId) {
-        this.apartadoId = apartadoId;
+    public void setEquipoNombre(String equipoNombre) {
+        this.equipoNombre = equipoNombre;
     }
 
     public boolean isIncidencia() {
@@ -90,19 +90,8 @@ public class Registro {
         this.incidencia = incidencia;
     }
 
-    public String getNotaIncidencia() {
-        return notaIncidencia;
-    }
-
-    public void setNotaIncidencia(String notaIncidencia) {
-        this.notaIncidencia = notaIncidencia;
-    }
-
-    public String getEquipoNombre() {
-        return equipoNombre;
-    }
-
-    public void setEquipoNombre(String equipoNombre) {
-        this.equipoNombre = equipoNombre;
+    @Override
+    public String toString() {
+        return "Registro #" + id + " - " + laboratorio;
     }
 }

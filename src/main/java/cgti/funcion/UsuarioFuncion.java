@@ -6,57 +6,82 @@ import cgti.guardado.UsuarioGuardado;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Lógica de negocio para gestión de usuarios.
+ * Maneja registro, búsqueda, eliminación y control de roles.
+ */
 public class UsuarioFuncion {
 
-    private UsuarioGuardado guardar = new UsuarioGuardado();
+    private UsuarioGuardado guardar = new UsuarioGuardado(); // Capa de persistencia
 
+    /**
+     * Verifica si un rol puede ser asignado por el creador.
+     * Solo SUPERADMINISTRADOR puede crear otros roles.
+     */
     public boolean puedeAsignarRol(Rol creador, Rol rolNuevo) {
-        if (creador == Rol.SUPERADMINISTRADOR) {
-            return rolNuevo == Rol.ADMINISTRADOR || rolNuevo == Rol.OBSERVADOR || rolNuevo == Rol.ALUMNO;
-        }
-        return false;
+        return creador == Rol.SUPERADMINISTRADOR && rolNuevo != Rol.SUPERADMINISTRADOR;
     }
 
+    /**
+     * Busca un usuario por su matrícula.
+     * Retorna Optional vacío si no existe.
+     */
     public Optional<Usuario> buscarPorMatricula(int matricula) {
         return guardar.buscarPorMatricula(matricula);
     }
 
+    /**
+     * Lista todos los usuarios registrados.
+     */
     public List<Usuario> listarTodos() {
         return guardar.listarTodos();
     }
 
+    /**
+     * Registra un nuevo usuario.
+     * Retorna mensaje de error si la matrícula ya existe.
+     */
     public String registrar(Usuario usuario) {
-        // Verificar si ya existe la matrícula
         if (guardar.buscarPorMatricula(usuario.getMatricula()).isPresent()) {
-            return "Ya existe un usuario con esta matrícula";
+            return "Ya existe un usuario con esta matrícula"; // Matrícula duplicada
         }
-
         guardar.guardar(usuario);
         return "Usuario registrado correctamente";
     }
 
+    /**
+     * Elimina un usuario por matrícula.
+     * Protege al último ADMINISTRADOR y SUPERADMINISTRADOR.
+     */
     public String eliminar(int matricula) {
-        Optional<Usuario> u = guardar.buscarPorMatricula(matricula);
-        if (u.isEmpty()) {
-            return "Usuario no encontrado";
+        Optional<Usuario> usuario = guardar.buscarPorMatricula(matricula);
+
+        if (usuario.isEmpty()) {
+            return "Usuario no encontrado"; // No existe
         }
-        if (u.get().getRol() == Rol.ADMINISTRADOR) {
-            long totalAdmins = guardar.listarTodos().stream()
-                    .filter(x -> x.getRol() == Rol.ADMINISTRADOR)
-                    .count();
-            if (totalAdmins <= 1) {
-                return "No puedes eliminar al único administrador del sistema";
-            }
+
+        Rol rol = usuario.get().getRol();
+
+        // No permitir eliminar al último administrador
+        if (rol == Rol.ADMINISTRADOR && contarPorRol(Rol.ADMINISTRADOR) <= 1) {
+            return "No puedes eliminar al único administrador del sistema";
         }
-        if (u.get().getRol() == Rol.SUPERADMINISTRADOR) {
-            long totalSuperAdmins = guardar.listarTodos().stream()
-                    .filter(x -> x.getRol() == Rol.SUPERADMINISTRADOR)
-                    .count();
-            if (totalSuperAdmins <= 1) {
-                return "No puedes eliminar al único superadministrador del sistema";
-            }
+
+        // No permitir eliminar al último superadministrador
+        if (rol == Rol.SUPERADMINISTRADOR && contarPorRol(Rol.SUPERADMINISTRADOR) <= 1) {
+            return "No puedes eliminar al único superadministrador del sistema";
         }
+
         guardar.eliminar(matricula);
         return "Usuario eliminado correctamente";
+    }
+
+    /**
+     * Cuenta cuántos usuarios tienen un rol específico.
+     */
+    private long contarPorRol(Rol rol) {
+        return guardar.listarTodos().stream()
+                .filter(u -> u.getRol() == rol)
+                .count();
     }
 }

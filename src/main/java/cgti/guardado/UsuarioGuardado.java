@@ -16,7 +16,8 @@ public class UsuarioGuardado {
     public void guardar(Usuario usuario) {
         String sql = "INSERT INTO dbo.usuarios (matricula, nombre, apellido_paterno, apellido_materno, "
                 + "fecha_nacimiento, telefono, rol, cuatrimestre, carrera, grupo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = DatabaseConfig.conectar().prepareStatement(sql)) {
+        try (Connection con = DatabaseConfig.conectar();
+                PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, String.valueOf(usuario.getMatricula()));
             ps.setString(2, usuario.getNombre());
             ps.setString(3, usuario.getApellidoPaterno());
@@ -46,7 +47,8 @@ public class UsuarioGuardado {
 
     public Optional<Usuario> buscarPorMatricula(int matricula) {
         String sql = "SELECT * FROM dbo.usuarios WHERE matricula = ?";
-        try (PreparedStatement ps = DatabaseConfig.conectar().prepareStatement(sql)) {
+        try (Connection con = DatabaseConfig.conectar();
+                PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, String.valueOf(matricula));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -63,7 +65,8 @@ public class UsuarioGuardado {
     public List<Usuario> listarTodos() {
         List<Usuario> lista = new ArrayList<>();
         String sql = "SELECT * FROM dbo.usuarios";
-        try (PreparedStatement ps = DatabaseConfig.conectar().prepareStatement(sql);
+        try (Connection con = DatabaseConfig.conectar();
+                PreparedStatement ps = con.prepareStatement(sql);
                 ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 lista.add(mapear(rs));
@@ -77,7 +80,8 @@ public class UsuarioGuardado {
 
     public void eliminar(int matricula) {
         String sql = "DELETE FROM dbo.usuarios WHERE matricula = ?";
-        try (PreparedStatement ps = DatabaseConfig.conectar().prepareStatement(sql)) {
+        try (Connection con = DatabaseConfig.conectar();
+                PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, String.valueOf(matricula));
             ps.executeUpdate();
         } catch (SQLException e) {

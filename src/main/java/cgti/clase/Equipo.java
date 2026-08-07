@@ -4,7 +4,7 @@ public class Equipo {
 
   private Long id;
   private String nombreEqp;
-  private Laboratorio laboratorio;
+  private String laboratorio;
   private String software;
 
   // setters y geters
@@ -32,11 +32,11 @@ public class Equipo {
     this.nombreEqp = nombreEqp;
   }
 
-  public Laboratorio getLaboratorio() {
+  public String getLaboratorio() {
     return laboratorio;
   }
 
-  public void setLaboratorio(Laboratorio laboratorio) {
+  public void setLaboratorio(String laboratorio) {
     this.laboratorio = laboratorio;
   }
 

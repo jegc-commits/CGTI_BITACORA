@@ -1,13 +1,14 @@
 package cgti;// pertenece al paquete 
 
-import cgti.vistas.InicioFrame; // importando clase InicioFrame
+import cgti.vistas.AlumnoAccesoFrame;
 import javax.swing.SwingUtilities; // libreria para trabajar con swing ( graficos)
+import com.formdev.flatlaf.FlatLightLaf;
 
 public class Main { // se crea la clase principal
-    public static void main(String[] args) { 
-        SwingUtilities.invokeLater(() -> { // se manda a llamar 
-            InicioFrame frame = new InicioFrame(); // crea InicioFrame
-            frame.setVisible(true);// muestra la pantalla
-        });
+    public static void main(String[] args) {
+        // Activar FlatLaf
+        FlatLightLaf.setup();
+
+        SwingUtilities.invokeLater(() -> new AlumnoAccesoFrame().setVisible(true));
     }
 }

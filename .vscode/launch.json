@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "InicioFrame",
+            "request": "launch",
+            "mainClass": "cgti.vistas.InicioFrame",
+            "projectName": "CGTI"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"

@@ -6,7 +6,7 @@ public class Apartado {
 
     private Long id;
     private Usuario usuario;
-    private Laboratorio laboratorio;
+    private String laboratorio;
     private Equipo equipo;
     private DiaSemana diaSemana;
     private LocalDateTime horaInicio;
@@ -32,11 +32,11 @@ public class Apartado {
         this.usuario = usuario;
     }
 
-    public Laboratorio getLaboratorio() {
+    public String getLaboratorio() {
         return laboratorio;
     }
 
-    public void setLaboratorio(Laboratorio laboratorio) {
+    public void setLaboratorio(String laboratorio) {
         this.laboratorio = laboratorio;
     }
 

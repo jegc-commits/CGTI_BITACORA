@@ -1,76 +1,136 @@
 package cgti.funcion;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
 import cgti.clase.Equipo;
-import cgti.clase.Laboratorio;
 import cgti.clase.Registro;
 import cgti.clase.Usuario;
 import cgti.guardado.RegistroGuardado;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Clase que contiene la lógica de negocio para la gestión de registros
+ * (entradas y salidas de laboratorio)
+ */
 public class RegistroFuncion {
 
-    // Si un alumno lleva mas de este numero de horas sin registrar salida,
-    // se marca automaticamente y se genera una incidencia.
-    private static final long HORAS_LIMITE_SALIDA = 4;
+    private final RegistroGuardado registroGuardado = new RegistroGuardado();
 
-    private RegistroGuardado guardar = new RegistroGuardado();
+    // ==================== OPERACIONES DE REGISTRO ====================
 
-    public String registrarEntrada(Usuario usuario, Equipo equipo, Laboratorio laboratorio, String proposito) {
-        if (obtenerRegistroActivo(usuario.getMatricula()).isPresent()) {
-            return "Ya tienes una entrada activa, registra tu salida primero";
+    /**
+     * Registra la entrada de un usuario a un laboratorio
+     */
+    public String registrarEntrada(Usuario usuario, Equipo equipo, String laboratorio, String proposito) {
+        // Validar que el usuario no tenga una sesión activa
+        if (tieneSesionActiva(usuario.getMatricula())) {
+            return "El usuario ya tiene una sesión activa. Debe registrar su salida primero.";
         }
+
+        // Validar que el equipo esté disponible
+        if (equipoTieneSesionActiva(equipo.getId())) {
+            return "El equipo " + equipo.getNombreEqp() + " está ocupado en este momento.";
+        }
+
+        // Crear el registro
         Registro registro = new Registro();
-        registro.setUsuario(usuario);
-        registro.setLaboratorio(laboratorio);
-        registro.setEquipoId(equipo.getId());
         registro.setHoraEntrada(LocalDateTime.now());
+        registro.setUsuario(usuario);
+        registro.setEquipoId(equipo.getId());
+        registro.setEquipoNombre(equipo.getNombreEqp());
+        registro.setLaboratorio(laboratorio);
         registro.setProposito(proposito);
-        guardar.guardar(registro);
+        registro.setIncidencia(false);
+
+        registroGuardado.guardar(registro);
         return "Entrada registrada correctamente";
     }
 
+    /**
+     * Registra la salida de un usuario del laboratorio
+     */
     public String registrarSalida(int matricula) {
-        Optional<Registro> registroActivo = obtenerRegistroActivo(matricula);
+        Optional<Registro> registroActivo = registroGuardado.buscarRegistroActivo(matricula);
+
         if (registroActivo.isEmpty()) {
-            return "No tienes una entrada activa";
+            return "No se encontró una sesión activa para este usuario.";
         }
 
-        Registro registro = registroActivo.get();
-        registro.setHoraSalida(LocalDateTime.now());
-        guardar.actualizar(registro);
-        return "Salida registrada correctamente";
+        boolean exito = registroGuardado.registrarSalida(matricula);
+        if (exito) {
+            return "Salida registrada correctamente";
+        } else {
+            return "Error al registrar la salida.";
+        }
     }
 
+    /**
+     * Reporta una incidencia en el equipo actual
+     */
+    public String reportarIncidencia(int matricula, String descripcion) {
+        Optional<Registro> registroActivo = registroGuardado.buscarRegistroActivo(matricula);
+
+        if (registroActivo.isEmpty()) {
+            return "No tienes una sesión activa para reportar incidencia.";
+        }
+
+        boolean exito = registroGuardado.reportarIncidencia(registroActivo.get().getId(), descripcion);
+        if (exito) {
+            return "Incidencia reportada correctamente";
+        } else {
+            return "Error al reportar la incidencia.";
+        }
+    }
+
+    // ==================== CONSULTAS ====================
+
+    /**
+     * Verifica si un usuario tiene una sesión activa
+     */
     public boolean tieneSesionActiva(int matricula) {
-        return obtenerRegistroActivo(matricula).isPresent();
+        return registroGuardado.tieneSesionActiva(matricula);
     }
 
+    /**
+     * Verifica si un equipo tiene una sesión activa
+     */
+    public boolean equipoTieneSesionActiva(Long equipoId) {
+        return registroGuardado.existeSesionActivaParaEquipo(equipoId);
+    }
+
+    /**
+     * Obtiene el registro activo de un usuario
+     */
+    public Optional<Registro> getRegistroActivo(int matricula) {
+        return registroGuardado.buscarRegistroActivo(matricula);
+    }
+
+    /**
+     * Lista todos los registros
+     */
     public List<Registro> listarTodos() {
-        return guardar.listarTodos();
+        return registroGuardado.listarTodos();
     }
 
-    private Optional<Registro> obtenerRegistroActivo(int matricula) {
-        Optional<Registro> activo = guardar.buscarRegistroActivo(matricula);
-        if (activo.isEmpty()) {
-            return activo;
-        }
+    /**
+     * Lista los registros de un usuario específico
+     */
+    public List<Registro> listarPorUsuario(int matricula) {
+        return registroGuardado.listarPorUsuario(matricula);
+    }
 
-        Registro registro = activo.get();
-        long horasTranscurridas = Duration.between(registro.getHoraEntrada(), LocalDateTime.now()).toHours();
+    /**
+     * Busca un registro por su ID
+     */
+    public Optional<Registro> buscarPorId(Long id) {
+        return registroGuardado.buscarPorId(id);
+    }
 
-        if (horasTranscurridas >= HORAS_LIMITE_SALIDA) {
-            registro.setHoraSalida(registro.getHoraEntrada().plusHours(HORAS_LIMITE_SALIDA));
-            registro.setIncidencia(true);
-            registro.setNotaIncidencia("Salida marcada automáticamente: excedió " + HORAS_LIMITE_SALIDA
-                    + " horas sin registrar salida");
-            guardar.actualizar(registro);
-            return Optional.empty();
-        }
-
-        return Optional.of(registro);
+    /**
+     * Obtiene el historial de registros de un usuario
+     */
+    public List<Registro> getHistorial(int matricula) {
+        return registroGuardado.listarPorUsuario(matricula);
     }
 }

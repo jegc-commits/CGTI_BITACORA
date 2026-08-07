@@ -1,1 +1,0 @@
-· verifique sus dependencias y local host " usa chat si no sabs ·
